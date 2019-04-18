@@ -34,6 +34,9 @@ class ArticleService(private val articleRepository: ArticleRepository) {
 		return articles.map { article -> initArticle(article) }
 	}
 	
+    fun getAllArticles(): List<Article> =
+			articleRepository.findAll().map { article -> initArticle(article) }
+	
     fun getAllArticlesByTitle(title: String): List<Article> =
             articleRepository.findByTitleContainingIgnoreCase(title).map { article -> initArticle(article) }
 
@@ -64,6 +67,8 @@ class ArticleService(private val articleRepository: ArticleRepository) {
     fun deleteArticleById(articleId: Long) {
 		articleRepository.findById(articleId).map { article  ->
         	articleRepository.delete(article)
+		}.orElseThrow{
+			IllegalArgumentException("Article with id=${articleId} does not exist")	
 		}
     }
 }

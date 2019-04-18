@@ -9,31 +9,31 @@ import java.util.*
 import javax.validation.Valid
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/articles")
 class ArticleController(private val articleService: ArticleService) {
 	
-    @GetMapping("/articles")
+    @GetMapping("")
     fun getAllArticles(): List<Article> =
-            articleService.getAllArticles(null)
+            articleService.getAllArticles()
 	
-    @GetMapping("/articles/title/{title}")
+    @GetMapping("/title/{title}")
     fun getAllArticlesByTitle(@PathVariable(value = "title") title: String): Iterable<Article> =
             articleService.getAllArticlesByTitle(title)
 	
-    @GetMapping("/articles/title/length/{titleLength}")
+    @GetMapping("/title/length/{titleLength}")
     fun getAllArticlesByTitle(@PathVariable(value = "titleLength") titleLength: Int): Iterable<Article> =
-            articleService.getAllArticles(null).filter { article -> article.titleLength>=titleLength }
+            articleService.getAllArticles().filter { article -> article.titleLength>=titleLength }
 	
-    @GetMapping("/articles/search/{searchTerm}")
+    @GetMapping("/search/{searchTerm}")
     fun getAllArticlesAndSearch(@PathVariable(value = "searchTerm") searchTerm: String): Iterable<Article> =
             articleService.getAllArticles(searchTerm)
 
-    @PostMapping("/articles")
+    @PostMapping("")
     fun createNewArticle(@Valid @RequestBody article: Article): Article =
             articleService.createNewArticle(article)
 
 
-    @GetMapping("/articles/{id}")
+    @GetMapping("/{id}")
     fun getArticleById(@PathVariable(value = "id") articleId: Long): ResponseEntity<Article> {
         try {
         	val article = articleService.findById(articleId); 
@@ -43,7 +43,7 @@ class ArticleController(private val articleService: ArticleService) {
 		}
     }
 
-    @PutMapping("/articles/{id}")
+    @PutMapping("/{id}")
     fun updateArticleById(@PathVariable(value = "id") articleId: Long,
                           @Valid @RequestBody newArticle: Article): ResponseEntity<Article> {
 		try {
@@ -54,7 +54,7 @@ class ArticleController(private val articleService: ArticleService) {
 		}
     }
 
-    @DeleteMapping("/articles/{id}")
+    @DeleteMapping("/{id}")
     fun deleteArticleById(@PathVariable(value = "id") articleId: Long): ResponseEntity<Void> {
         try {
             articleService.deleteArticleById(articleId)
