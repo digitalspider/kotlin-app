@@ -1,0 +1,4 @@
+CREATE DATABASE kotlin CHARACTER SET utf8 COLLATE utf8_bin;
+CREATE USER 'kotlin'@'%' IDENTIFIED BY 'kotlin';
+GRANT ALL PRIVILEGES on kotlin.* to 'kotlin'@'%';
+FLUSH PRIVILEGES;
