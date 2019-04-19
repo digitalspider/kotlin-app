@@ -9,32 +9,32 @@ import java.util.*
 import javax.validation.Valid
 
 @RestController
-@RequestMapping("/api/articles")
+@RequestMapping("/api/article")
 class ArticleController(private val articleService: ArticleService) {
 	
     @GetMapping("")
-    fun getAllArticles(): List<Article> =
-            articleService.getAllArticles()
+    fun getAll(): List<Article> =
+            articleService.getAll()
 	
     @GetMapping("/title/{title}")
-    fun getAllArticlesByTitle(@PathVariable(value = "title") title: String): Iterable<Article> =
-            articleService.getAllArticlesByTitle(title)
+    fun findByTitle(@PathVariable(value = "title") title: String): Iterable<Article> =
+            articleService.findByTitle(title)
 	
     @GetMapping("/title/length/{titleLength}")
-    fun getAllArticlesByTitle(@PathVariable(value = "titleLength") titleLength: Int): Iterable<Article> =
-            articleService.getAllArticles().filter { article -> article.titleLength>=titleLength }
+    fun findByTitleLength(@PathVariable(value = "titleLength") titleLength: Int): Iterable<Article> =
+            articleService.getAll().filter { article -> article.titleLength>=titleLength }
 	
     @GetMapping("/search/{searchTerm}")
-    fun getAllArticlesAndSearch(@PathVariable(value = "searchTerm") searchTerm: String): Iterable<Article> =
-            articleService.getAllArticles(searchTerm)
+    fun search(@PathVariable(value = "searchTerm") searchTerm: String): Iterable<Article> =
+            articleService.search(searchTerm)
 
     @PostMapping("")
-    fun createNewArticle(@Valid @RequestBody article: Article): Article =
-            articleService.createNewArticle(article)
+    fun create(@Valid @RequestBody article: Article): Article =
+            articleService.create(article)
 
 
     @GetMapping("/{id}")
-    fun getArticleById(@PathVariable(value = "id") articleId: Long): ResponseEntity<Article> {
+    fun get(@PathVariable(value = "id") articleId: Long): ResponseEntity<Article> {
         try {
         	val article = articleService.findById(articleId); 
             return ResponseEntity.ok(article)
@@ -44,10 +44,10 @@ class ArticleController(private val articleService: ArticleService) {
     }
 
     @PutMapping("/{id}")
-    fun updateArticleById(@PathVariable(value = "id") articleId: Long,
+    fun update(@PathVariable(value = "id") articleId: Long,
                           @Valid @RequestBody newArticle: Article): ResponseEntity<Article> {
 		try {
-	        val updatedArticle = articleService.updateArticleById(articleId, newArticle)
+	        val updatedArticle = articleService.update(articleId, newArticle)
 	        return ResponseEntity.ok().body(updatedArticle)
         } catch(e: IllegalArgumentException) {
         	return ResponseEntity.notFound().build()
@@ -55,9 +55,9 @@ class ArticleController(private val articleService: ArticleService) {
     }
 
     @DeleteMapping("/{id}")
-    fun deleteArticleById(@PathVariable(value = "id") articleId: Long): ResponseEntity<Void> {
+    fun delete(@PathVariable(value = "id") articleId: Long): ResponseEntity<Void> {
         try {
-            articleService.deleteArticleById(articleId)
+            articleService.delete(articleId)
             return ResponseEntity<Void>(HttpStatus.OK)
         } catch(e: IllegalArgumentException) {
         	return ResponseEntity.notFound().build()

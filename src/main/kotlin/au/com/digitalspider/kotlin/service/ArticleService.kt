@@ -12,7 +12,7 @@ import javax.validation.Valid
 @Service
 class ArticleService(private val articleRepository: ArticleRepository) {
 
-	fun initArticle(article: Article): Article {
+	fun init(article: Article): Article {
 		calculateTitleLength(article)
 		return article;
 	}
@@ -23,48 +23,45 @@ class ArticleService(private val articleRepository: ArticleRepository) {
 		return article;
 	}
 
-    fun getAllArticles(searchTerm: String?): List<Article> {
+    fun search(searchTerm: String): List<Article> {
         var articles = articleRepository.findAll();
-		if (StringUtils.isNotBlank(searchTerm)) {
-			articles = articles.filter { article ->
-				StringUtils.containsIgnoreCase(article.title, searchTerm) ||
-				StringUtils.containsIgnoreCase(article.content, searchTerm)
-			}
-		}
-		return articles.map { article -> initArticle(article) }
+		return articles.filter { article ->
+			StringUtils.containsIgnoreCase(article.title, searchTerm) ||
+			StringUtils.containsIgnoreCase(article.content, searchTerm)
+		}.map { article -> init(article) }
 	}
 	
-    fun getAllArticles(): List<Article> =
-			articleRepository.findAll().map { article -> initArticle(article) }
+    fun getAll(): List<Article> =
+			articleRepository.findAll().map { article -> init(article) }
 	
-    fun getAllArticlesByTitle(title: String): List<Article> =
-            articleRepository.findByTitleContainingIgnoreCase(title).map { article -> initArticle(article) }
+    fun findByTitle(title: String): List<Article> =
+            articleRepository.findByTitleContainingIgnoreCase(title).map { article -> init(article) }
 
-    fun createNewArticle(article: Article): Article =
-            initArticle(articleRepository.save(article))
+    fun create(article: Article): Article =
+            init(articleRepository.save(article))
 
 
     fun findById(articleId: Long): Article {
         return articleRepository.findById(articleId).map { article ->
-			initArticle(article)
+			init(article)
 		}.orElseThrow{
 			IllegalArgumentException("Article with id=${articleId} does not exist")	
 		}
     }
 
-    fun updateArticleById(articleId: Long, newArticle: Article): Article {
+    fun update(articleId: Long, newArticle: Article): Article {
         return articleRepository.findById(articleId).map { existingArticle ->
             val updatedArticle: Article = existingArticle.copy(
 				title = newArticle.title,
             	content = newArticle.content
             )
-            initArticle(articleRepository.save(updatedArticle))
+            init(articleRepository.save(updatedArticle))
 		}.orElseThrow{
 			IllegalArgumentException("Article with id=${articleId} does not exist")	
 		}
     }
 
-    fun deleteArticleById(articleId: Long) {
+    fun delete(articleId: Long) {
 		articleRepository.findById(articleId).map { article  ->
         	articleRepository.delete(article)
 		}.orElseThrow{
