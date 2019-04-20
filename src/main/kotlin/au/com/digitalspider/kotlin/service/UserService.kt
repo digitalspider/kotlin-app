@@ -3,6 +3,7 @@ package au.com.digitalspider.kotlin.controller
 import au.com.digitalspider.kotlin.model.User
 import au.com.digitalspider.kotlin.repo.UserRepository
 import org.apache.commons.lang3.StringUtils
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -83,7 +84,8 @@ class UserService(private val userRepository: UserRepository) {
         return userRepository.findById(userId).map { existingUser ->
             val updatedUser: User = existingUser.copy(
 				username = newUser.username,
-            	email = newUser.email
+            	email = newUser.email,
+				roles = newUser.roles
             )
             init(userRepository.save(updatedUser))
 		}.orElseThrow{
