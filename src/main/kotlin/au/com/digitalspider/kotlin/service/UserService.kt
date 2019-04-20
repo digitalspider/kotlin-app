@@ -49,8 +49,26 @@ class UserService(private val userRepository: UserRepository) {
 		}
 	}
 
-    fun create(user: User): User =
-            init(userRepository.save(user))
+    fun create(user: User): User {
+		try {
+			try {
+				findByUsername(user.username);
+				throw Exception("User with username ${user.username} already exists");
+			} catch(e: IllegalArgumentException) {
+				// Ignore: user with username does not exist
+			}
+
+			try {
+				findByEmail(user.email);
+				throw Exception("User with email ${user.email} already exists");
+			} catch(e: IllegalArgumentException) {
+				// Ignore: user with email does not exist
+			}
+		} catch(e: Exception) {
+			throw IllegalArgumentException(e.message);
+		}
+		return init(userRepository.save(user));
+	}
 
 
     fun findById(userId: Long): User {

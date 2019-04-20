@@ -1,6 +1,7 @@
 package au.com.digitalspider.kotlin.controller
 
 import au.com.digitalspider.kotlin.model.User
+import au.com.digitalspider.kotlin.io.Error
 import au.com.digitalspider.kotlin.repo.UserRepository
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -39,9 +40,16 @@ class UserController(private val userService: UserService) {
             userService.search(searchTerm)
 
     @PostMapping("")
-    fun create(@Valid @RequestBody user: User): User =
-            userService.create(user)
-
+    fun create(@Valid @RequestBody user: User): ResponseEntity<Any> {
+        try {
+        	val user = userService.create(user);
+            return ResponseEntity.ok(user)
+        } catch(e: IllegalArgumentException) {
+            val status = HttpStatus.PRECONDITION_FAILED;
+            val error = Error(status.value(), e.message);
+        	return ResponseEntity.status(status).body(error)
+		}
+    }
 
     @GetMapping("/{id}")
     fun get(@PathVariable(value = "id") userId: Long): ResponseEntity<User> {
