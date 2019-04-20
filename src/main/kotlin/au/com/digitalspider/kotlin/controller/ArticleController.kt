@@ -1,7 +1,8 @@
 package au.com.digitalspider.kotlin.controller
 
+import au.com.digitalspider.kotlin.io.Error
 import au.com.digitalspider.kotlin.model.Article
-import au.com.digitalspider.kotlin.repo.ArticleRepository
+import au.com.digitalspider.kotlin.service.ArticleService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -29,9 +30,15 @@ class ArticleController(private val articleService: ArticleService) {
             articleService.search(searchTerm)
 
     @PostMapping("")
-    fun create(@Valid @RequestBody article: Article): Article =
-            articleService.create(article)
-
+    fun create(@Valid @RequestBody article: Article): ResponseEntity<Any> {
+        try {
+            return ResponseEntity.ok(articleService.create(article))
+        } catch(e: IllegalArgumentException) {
+            val status = HttpStatus.PRECONDITION_FAILED;
+            val error = Error(status.value(), e.message);
+        	return ResponseEntity.status(status).body(error)
+        }
+    }
 
     @GetMapping("/{id}")
     fun get(@PathVariable(value = "id") articleId: Long): ResponseEntity<Article> {
@@ -40,7 +47,7 @@ class ArticleController(private val articleService: ArticleService) {
             return ResponseEntity.ok(article)
         } catch(e: IllegalArgumentException) {
         	return ResponseEntity.notFound().build()
-		}
+        }
     }
 
     @PutMapping("/{id}")

@@ -9,5 +9,5 @@ interface RoleRepository : JpaRepository<Role, Long> {
 	
 	fun findOneByNameIgnoreCase(name: String): Role
 	
-	fun findByNameContainsIgnoreCase(name: String): List<Role>
+	fun findByNameContainingIgnoreCase(name: String): List<Role>
 }

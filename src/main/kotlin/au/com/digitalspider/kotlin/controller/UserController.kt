@@ -1,8 +1,8 @@
 package au.com.digitalspider.kotlin.controller
 
-import au.com.digitalspider.kotlin.model.User
 import au.com.digitalspider.kotlin.io.Error
-import au.com.digitalspider.kotlin.repo.UserRepository
+import au.com.digitalspider.kotlin.model.User
+import au.com.digitalspider.kotlin.service.UserService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*

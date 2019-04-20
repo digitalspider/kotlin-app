@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository
 interface ArticleRepository : JpaRepository<Article, Long> {
 	
 	fun findByTitleContainingIgnoreCase(title: String): List<Article>
+
+	fun findOneByTitleIgnoreCase(title: String): Article
 }

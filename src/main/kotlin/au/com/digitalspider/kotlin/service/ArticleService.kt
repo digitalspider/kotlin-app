@@ -1,16 +1,19 @@
-package au.com.digitalspider.kotlin.controller
+package au.com.digitalspider.kotlin.service
 
 import au.com.digitalspider.kotlin.model.Article
 import au.com.digitalspider.kotlin.repo.ArticleRepository
+import au.com.digitalspider.kotlin.service.UserService
 import org.apache.commons.lang3.StringUtils
+import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.*
 import javax.validation.Valid
 
 @Service
-class ArticleService(private val articleRepository: ArticleRepository) {
+class ArticleService(private val articleRepository: ArticleRepository, private val userService: UserService) {
 
 	fun init(article: Article): Article {
 		calculateTitleLength(article)
@@ -37,8 +40,23 @@ class ArticleService(private val articleRepository: ArticleRepository) {
     fun findByTitle(title: String): List<Article> =
             articleRepository.findByTitleContainingIgnoreCase(title).map { article -> init(article) }
 
-    fun create(article: Article): Article =
-            init(articleRepository.save(article))
+    fun create(article: Article): Article {
+		if (article.createdById == 0L) {
+			throw IllegalArgumentException("Cannot create article without a createdById value")
+		}
+		val creator = userService.findById(article.createdById);
+		var updatedArticle = article.copy(
+			createdBy = creator,
+			updatedBy = creator
+		);
+		try {
+			articleRepository.findOneByTitleIgnoreCase(article.title);
+			throw IllegalArgumentException("Article with title ${article.title} already exists");
+		} catch(e: EmptyResultDataAccessException) {
+			// Ignore: article with title does not exist
+		}
+    	return init(articleRepository.save(updatedArticle))
+	}
 
 
     fun findById(articleId: Long): Article {
@@ -49,11 +67,16 @@ class ArticleService(private val articleRepository: ArticleRepository) {
 		}
     }
 
-    fun update(articleId: Long, newArticle: Article): Article {
+    fun update(articleId: Long, article: Article): Article {
+		if (article.updatedById == 0L) {
+			throw IllegalArgumentException("Cannot update article without a updatedById value")
+		}
         return articleRepository.findById(articleId).map { existingArticle ->
             val updatedArticle: Article = existingArticle.copy(
-				title = newArticle.title,
-            	content = newArticle.content
+				title = article.title,
+            	content = article.content,
+				updatedBy = userService.findById(article.updatedById),
+				updatedAt = LocalDateTime.now()
             )
             init(articleRepository.save(updatedArticle))
 		}.orElseThrow{
@@ -62,8 +85,12 @@ class ArticleService(private val articleRepository: ArticleRepository) {
     }
 
     fun delete(articleId: Long) {
-		articleRepository.findById(articleId).map { article  ->
-        	articleRepository.delete(article)
+		articleRepository.findById(articleId).map { existingArticle  ->
+            val updatedArticle: Article = existingArticle.copy(
+				deletedBy = userService.findById(existingArticle.createdBy!!.id), // TODO: Fix this
+            	deletedAt = LocalDateTime.now()
+            )
+        	articleRepository.save(updatedArticle)
 		}.orElseThrow{
 			IllegalArgumentException("Article with id=${articleId} does not exist")	
 		}

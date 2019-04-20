@@ -1,15 +1,16 @@
-package au.com.digitalspider.kotlin.controller
+package au.com.digitalspider.kotlin.service
 
 import au.com.digitalspider.kotlin.model.User
 import au.com.digitalspider.kotlin.repo.UserRepository
+import java.time.LocalDateTime
+import java.util.*
+import javax.validation.Valid
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
-import java.util.*
-import javax.validation.Valid
 
 @Service
 class UserService(private val userRepository: UserRepository) {
@@ -52,25 +53,19 @@ class UserService(private val userRepository: UserRepository) {
 
     fun create(user: User): User {
 		try {
-			try {
-				findByUsername(user.username);
-				throw Exception("User with username ${user.username} already exists");
-			} catch(e: IllegalArgumentException) {
-				// Ignore: user with username does not exist
-			}
-
-			try {
-				findByEmail(user.email);
-				throw Exception("User with email ${user.email} already exists");
-			} catch(e: IllegalArgumentException) {
-				// Ignore: user with email does not exist
-			}
-		} catch(e: Exception) {
-			throw IllegalArgumentException(e.message);
+			userRepository.findOneByUsernameIgnoreCase(user.username)
+			throw IllegalArgumentException("User with username ${user.username} already exists");
+		} catch(e: EmptyResultDataAccessException) {
+			// Ignore: user with username does not exist
+		}
+		try {
+			userRepository.findOneByEmailIgnoreCase(user.email)
+			throw IllegalArgumentException("User with email ${user.email} already exists");
+		} catch(e: EmptyResultDataAccessException) {
+			// Ignore: user with email does not exist
 		}
 		return init(userRepository.save(user));
 	}
-
 
     fun findById(userId: Long): User {
         return userRepository.findById(userId).map { user ->
@@ -80,12 +75,12 @@ class UserService(private val userRepository: UserRepository) {
 		}
     }
 
-    fun update(userId: Long, newUser: User): User {
+    fun update(userId: Long, user: User): User {
         return userRepository.findById(userId).map { existingUser ->
             val updatedUser: User = existingUser.copy(
-				username = newUser.username,
-            	email = newUser.email,
-				roles = newUser.roles
+				username = user.username,
+            	email = user.email,
+				roles = user.roles
             )
             init(userRepository.save(updatedUser))
 		}.orElseThrow{
@@ -94,8 +89,11 @@ class UserService(private val userRepository: UserRepository) {
     }
 
     fun delete(userId: Long) {
-		userRepository.findById(userId).map { user  ->
-        	userRepository.delete(user)
+		userRepository.findById(userId).map { existingUser  ->
+            val updatedUser = existingUser.copy(
+            	deletedAt = LocalDateTime.now()
+            )
+        	userRepository.save(updatedUser)
 		}.orElseThrow{
 			IllegalArgumentException("User with id=${userId} does not exist")	
 		}
