@@ -2,6 +2,7 @@ package au.com.digitalspider.kotlin.service
 
 import au.com.digitalspider.kotlin.model.User
 import au.com.digitalspider.kotlin.repo.UserRepository
+import au.com.digitalspider.kotlin.auth.SecurityUserDetails
 import java.time.LocalDateTime
 import java.util.*
 import javax.validation.Valid
@@ -10,10 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.userdetails.UserDetails
+import org.springframework.security.core.userdetails.UserDetailsService
+import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
 
 @Service
-class UserService(private val userRepository: UserRepository) {
+class UserService(private val userRepository: UserRepository) : UserDetailsService {
 
 	fun init(user: User): User {
 		initRoles(user)
@@ -23,6 +27,19 @@ class UserService(private val userRepository: UserRepository) {
 	fun initRoles(user: User): User {
 		return user;
 	}
+	
+    override fun loadUserByUsername(username: String): UserDetails {
+		try {
+			println("username=${username}");
+	        val user: User = findByUsername(username)
+			println("user=${user}");
+	        val securityUserDetails = SecurityUserDetails(user)
+			println("securityUserDetails=${securityUserDetails}");
+			return securityUserDetails;
+		} catch (e: IllegalArgumentException) {
+			throw UsernameNotFoundException(e.message)
+		}
+    }
 
     fun search(searchTerm: String): List<User> {
         var users = userRepository.findAll();
